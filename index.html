@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Funcionários</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            
+            color: #000;
+            padding: 15px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        footer {
+           
+            color: #000;
+            text-align: center;
+            
+        }
+
+        main {
+            padding: 70px 20px 50px;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: auto;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input, select {
+            padding: 8px;
+            margin-bottom: 16px;
+            width: calc(100% - 18px);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        img {
+            max-width: 150px;
+            display: block;
+            margin: 20px auto;
+            transform: rotate(0deg); /* Ensure image is not rotated */
+        }
+
+        .error {
+            color: red;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+ 
+        <h1>Cadastro de Funcionários</h1>
+ 
+
+    <main>
+        <form id="employeeForm">
+            <label for="foto">Foto do Funcionário:</label>
+            <input type="file" id="foto" name="foto" accept="image/*"><br>
+            <img id="preview" src="#" alt="Pré-visualização da foto"><br>
+
+            <label for="name">Nome:</label>
+            <input type="text" id="name" name="name" required>
+            <span class="error" id="nameError"></span>
+
+            <label for="cpf">CPF:</label>
+            <input type="text" id="cpf" name="cpf" required>
+            <span class="error" id="cpfError"></span>
+
+            <label for="rg">RG:</label>
+            <input type="text" id="rg" name="rg" required>
+            <span class="error" id="rgError"></span>
+
+            <label for="ctps">Número da CTPS:</label>
+            <input type="text" id="ctps" name="ctps" required>
+            <span class="error" id="ctpsError"></span>
+
+            <label for="tituloEleitor">Número do Título de Eleitor:</label>
+            <input type="text" id="tituloEleitor" name="tituloEleitor" required>
+            <span class="error" id="tituloEleitorError"></span>
+
+            <label for="comprovanteEndereco">Endereço (com bairro e CEP):</label>
+            <input type="text" id="comprovanteEndereco" name="comprovanteEndereco" required>
+            <span class="error" id="comprovanteEnderecoError"></span>
+
+            <label for="pis">Número do PIS:</label>
+            <input type="text" id="pis" name="pis" required>
+            <span class="error" id="pisError"></span>
+
+            <label for="estadoCivil">Estado Civil:</label>
+            <select id="estadoCivil" name="estadoCivil" required>
+                <option value="" disabled selected>Selecione</option>
+                <option value="solteiro">Solteiro</option>
+                <option value="casado">Casado</option>
+                <option value="divorciado">Divorciado</option>
+                <option value="viuvo">Viúvo</option>
+            </select>
+
+            <label for="grauInstrucao">Grau de Instrução:</label>
+            <input type="text" id="grauInstrucao" name="grauInstrucao" required>
+            <span class="error" id="grauInstrucaoError"></span>
+
+            <label for="contaBancaria">Conta Bancária:</label>
+            <input type="text" id="contaBancaria" name="contaBancaria" required>
+            <span class="error" id="contaBancariaError"></span>
+
+            <label for="certidaoNascimento">Certidão de Nascimento (Filho < 14 anos):</label>
+            <input type="text" id="certidaoNascimento" name="certidaoNascimento">
+            
+            <label for="cpfFilho">CPF do Filho:</label>
+            <input type="text" id="cpfFilho" name="cpfFilho">
+            
+            <label for="vacina">Carteira de Vacinação (Filho < 7 anos):</label>
+            <input type="text" id="vacina" name="vacina">
+            
+            <label for="declaracaoEscolar">Declaração Escolar (Filho > 7 anos):</label>
+            <input type="text" id="declaracaoEscolar" name="declaracaoEscolar">
+            
+            <label for="certidaoCasamento">Certidão de Casamento:</label>
+            <input type="text" id="certidaoCasamento" name="certidaoCasamento">
+            
+            <button type="button" onclick="saveEmployee()">Salvar</button>
+            <button type="button" onclick="generatePDF()">Gerar PDF</button>
+        </form>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Eletry Tecnologia. Todos os direitos reservados.</p>
+    </footer>
+
+    <!-- jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.0/jspdf.umd.min.js"></script>
+
+    <script>
+        let db;
+        let fotoDataUrl = "";
+
+        // Preview da foto
+        document.getElementById("foto").addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onloadend = function() {
+                fotoDataUrl = reader.result;
+                document.getElementById("preview").src = fotoDataUrl;
+            };
+
+            if (file) {
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById("preview").src = "#";
+                fotoDataUrl = "";
+            }
+        });
+
+        // Abrir a conexão com o IndexedDB
+        let request = indexedDB.open("EmployeeDB", 1);
+
+        request.onupgradeneeded = function(e) {
+            db = e.target.result;
+            db.createObjectStore("employees", { keyPath: "id", autoIncrement: true });
+        };
+
+        request.onsuccess = function(e) {
+            db = e.target.result;
+        };
+
+        function validateForm() {
+            let isValid = true;
+
+            const fields = [
+                { id: 'name', name: 'Nome' },
+                { id: 'cpf', name: 'CPF' },
+                { id: 'rg', name: 'RG' },
+                { id: 'ctps', name: 'Número da CTPS' },
+                { id: 'tituloEleitor', name: 'Número do Título de Eleitor' },
+                { id: 'comprovanteEndereco', name: 'Endereço' },
+                { id: 'pis', name: 'Número do PIS' },
+                { id: 'grauInstrucao', name: 'Grau de Instrução' },
+                { id: 'contaBancaria', name: 'Conta Bancária' },
+            ];
+
+            fields.forEach(field => {
+                const element = document.getElementById(field.id);
+                const errorElement = document.getElementById(field.id + 'Error');
+
+                if (!element.value.trim()) {
+                    isValid = false;
+                    errorElement.textContent = `${field.name} é obrigatório.`;
+                } else {
+                    errorElement.textContent = '';
+                }
+            });
+
+            return isValid;
+        }
+
+        function saveEmployee() {
+            if (!validateForm()) return;
+
+            let transaction = db.transaction(["employees"], "readwrite");
+            let store = transaction.objectStore("employees");
+
+            let employee = {
+                foto: fotoDataUrl,
+                name: document.getElementById("name").value,
+                cpf: document.getElementById("cpf").value,
+                rg: document.getElementById("rg").value,
+                ctps: document.getElementById("ctps").value,
+                tituloEleitor: document.getElementById("tituloEleitor").value,
+                comprovanteEndereco: document.getElementById("comprovanteEndereco").value,
+                pis: document.getElementById("pis").value,
+                grauInstrucao: document.getElementById("grauInstrucao").value,
+                contaBancaria: document.getElementById("contaBancaria").value,
+                certidaoNascimento: document.getElementById("certidaoNascimento").value,
+                cpfFilho: document.getElementById("cpfFilho").value,
+                vacina: document.getElementById("vacina").value,
+                declaracaoEscolar: document.getElementById("declaracaoEscolar").value,
+                certidaoCasamento: document.getElementById("certidaoCasamento").value,
+                estadoCivil: document.getElementById("estadoCivil").value
+            };
+
+            let request = store.add(employee);
+
+            request.onsuccess = function() {
+                alert("Funcionário salvo com sucesso!");
+                document.getElementById("employeeForm").reset();
+                document.getElementById("preview").src = "#";
+                fotoDataUrl = "";
+            };
+
+            request.onerror = function(e) {
+                console.error("Erro ao salvar o funcionário: ", e.target.error);
+                alert("Erro ao salvar o funcionário. Tente novamente.");
+            };
+        }
+
+        function generatePDF() {
+            if (!validateForm()) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(18);
+            doc.text('Cadastro de Funcionário', 14, 22);
+
+            doc.setFontSize(14);
+            doc.text('Nome: ' + document.getElementById('name').value, 14, 35);
+            doc.text('CPF: ' + document.getElementById('cpf').value, 14, 45);
+            doc.text('RG: ' + document.getElementById('rg').value, 14, 55);
+            doc.text('Número da CTPS: ' + document.getElementById('ctps').value, 14, 65);
+            doc.text('Número do Título de Eleitor: ' + document.getElementById('tituloEleitor').value, 14, 75);
+            doc.text('Endereço: ' + document.getElementById('comprovanteEndereco').value, 14, 85);
+            doc.text('Número do PIS: ' + document.getElementById('pis').value, 14, 95);
+            doc.text('Grau de Instrução: ' + document.getElementById('grauInstrucao').value, 14, 105);
+            doc.text('Conta Bancária: ' + document.getElementById('contaBancaria').value, 14, 115);
+            doc.text('Certidão de Nascimento: ' + document.getElementById('certidaoNascimento').value, 14, 125);
+            doc.text('CPF do Filho: ' + document.getElementById('cpfFilho').value, 14, 135);
+            doc.text('Carteira de Vacinação: ' + document.getElementById('vacina').value, 14, 145);
+            doc.text('Declaração Escolar: ' + document.getElementById('declaracaoEscolar').value, 14, 155);
+            doc.text('Certidão de Casamento: ' + document.getElementById('certidaoCasamento').value, 14, 165);
+            doc.text('Estado Civil: ' + document.getElementById('estadoCivil').value, 14, 175);
+
+            if (fotoDataUrl) {
+                doc.addImage(fotoDataUrl, 'JPEG', 14, 185, 40, 40);
+            }
+
+            doc.save('Cadastro_Funcionario.pdf');
+        }
+    </script>
+</body>
+</html>
